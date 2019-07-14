@@ -5,8 +5,10 @@ import {
   Input, 
   Button } from 'antd';
 import './login.less'
+import {reqLogin} from '../../api'
 import logo from './images/logo.png'
-  
+import {message} from 'antd'
+
 const Item = Form.Item // 不能写在import之前
 
 /**
@@ -19,12 +21,23 @@ class Login extends Component {
     event.preventDefault()
 
     // 对所有表单字段进行检验
-    this.props.form.validateFields((err, values) => {
+    this.props.form.validateFields(async (err, values) => {
       // 校验成功
       if (!err) {
-        console.log('提交登录的ajax请求 '+ values);
+        const {username, password} = values
+        const result = await reqLogin(username, password) // {status: 0, data: user} {status:1,msg: 'xxx}
+        // console.log("请求成功", response.data)
+        if (result.status === 0) {  //登录成功
+          // 显示成功了
+          message.success('登录成功')
+          // 跳转到后台管理界面
+          this.props.history.replace('/')
+        }else {//登录失败
+          // 提示登录信息
+          message.error(result.msg)
+        }
       } else {
-        console.log("校验失败");
+        console.log("校验失败")
       }
     });
 
@@ -33,7 +46,6 @@ class Login extends Component {
     // // 获取表单项的输入数据
     // const values = form.getFieldsValue()
     // console.log('loginSumbit', values);
-    
   }
 
   /**
@@ -79,6 +91,7 @@ class Login extends Component {
                     {max: 12, message: '用户名最多12位'},
                     {pattern: /^[a-zA-Z0-9_]+$/, message: '用户名必须是字母数字下划线'},
                   ],
+                  initialValue: "admin"
                 })( 
                   <Input
                     prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
@@ -143,4 +156,15 @@ export default WrapLogin
 /**
  * 1. 前台表单验证
  * 2. 收集表单输入数据
+ */
+
+ /*
+ async 和 await
+ 1. 作用?
+    简化promise对象的使用: 不用在使用then()来指定成功 / 失败的回调函数
+    以同步编码(没有回调函数)方式实现异步流程
+ 2. 哪里写await？
+    在返回promise的 表达式左侧, 写await: 不想要promise, 而想要promise异步执行成功的values数据
+ 3. 哪里写async？
+    await所在函数(最近的)的左侧
  */
